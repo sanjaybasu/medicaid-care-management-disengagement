@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import roc_auc_score, average_precision_score
+import sys; sys.path.insert(0, 'scripts'); from _boot import boot_ci, std_fns
 D = pathlib.Path("data_cache"); R = pathlib.Path("results"); HP = json.load(open(R/"hyperparameters.json"))["gbm"]
 F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet")
 df = F.merge(O[["decision_id","eligible","y_primary"]], on="decision_id"); df = df[df.eligible == 1].reset_index(drop=True); df["enc_date"] = pd.to_datetime(df.enc_date)
@@ -44,7 +45,7 @@ for L in pd.date_range("2025-01-31", "2025-12-31", freq="ME"):
     dec = np.clip(np.digitize(pte, cuts[1:-1]), 0, 9); yte = y[te]
     seen = np.isin(df.person_id.values[te], np.unique(df.person_id.values[tr]))
     months = ((df.enc_date[te] - L).dt.days // 30 + 1).values
-    rec = {"landmark": str(L.date()), "train": {"n": int(tr.sum()), "events": int(y[tr].sum())}, "threshold": round(thr, 4), "overall": metrics(yte, pte, thr),
+    rec = {"landmark": str(L.date()), "train": {"n": int(tr.sum()), "events": int(y[tr].sum())}, "threshold": round(thr, 4), "overall": metrics(yte, pte, thr), "overall_ci": boot_ci(yte, pte, df.person_id.values[te], std_fns(thr), B=300),
            "by_training_decile": {str(k+1): {"n": int((dec==k).sum()), "observed_rate": round(float(yte[dec==k].mean()), 4) if (dec==k).sum() else None} for k in range(10)},
            "by_month_since_landmark": {str(mo): metrics(yte[months==mo], pte[months==mo], thr) for mo in sorted(set(months)) if mo <= 9},
            "members_seen_in_training": metrics(yte[seen], pte[seen], thr), "members_not_seen_in_training": metrics(yte[~seen], pte[~seen], thr)}

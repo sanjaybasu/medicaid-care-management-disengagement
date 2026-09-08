@@ -8,5 +8,6 @@ out = {"unit": "true disengagements reached per care team per week, averaged ove
 for cap in (5, 10, 20, 40):
     out["capacity"][str(cap)] = {}
     for name, col in rules.items():
-        reached = df.sort_values(col, ascending=False).groupby(["market","week"]).head(cap).groupby(["market","week"]).y.sum(); out["capacity"][str(cap)][name] = round(float(reached.mean()), 2)
+        reached = df.sort_values(col, ascending=False).groupby(["market","week"]).head(cap).groupby(["market","week"]).y.sum(); v = reached.values; bs = [rng.choice(v, len(v)).mean() for _ in range(1000)]
+        out["capacity"][str(cap)][name] = round(float(reached.mean()), 2); out["capacity"][str(cap)][name + "_ci_95"] = [round(float(np.percentile(bs, 2.5)), 2), round(float(np.percentile(bs, 97.5)), 2)]
 json.dump(out, open(R/"capacity.json", "w"), indent=1); print(json.dumps(out, indent=1))

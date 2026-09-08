@@ -2,6 +2,7 @@
 import json, pathlib, numpy as np, pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, average_precision_score
+import sys; sys.path.insert(0, 'scripts'); from _boot import boot_ci
 D = pathlib.Path("data_cache"); R = pathlib.Path("results")
 P = pd.read_parquet(D/"test_predictions.parquet"); F = pd.read_parquet(D/"dp_features.parquet")[["decision_id","gender","age","any_bh","sud"]]; df = P.merge(F, on="decision_id")
 df["age_band"] = pd.cut(df.age, [-1, 17, 44, 64, 200], labels=["under 18","18 to 44","45 to 64","65 and over"]).astype(str); df["sex"] = df.gender.where(df.gender.isin(["Female","Male"]), "Other or not recorded"); df["behavioral_health"] = np.where(df.any_bh == 1, "behavioral health diagnosis", "none")
@@ -19,7 +20,8 @@ for dim, ref in [("sex","Female"),("race_group","White"),("state","VIRGINIA"),("
         rec = {"n": int(len(g)), "members": int(g.person_id.nunique()), "event_rate": round(float(g.y.mean()), 4)}
         for model in ["M5_full","M2_structured_history"]:
             sl, ic = calib(g.y.values, g[model].values); f = g["flag_"+model] == 1
-            rec[model] = {"auroc": round(float(roc_auc_score(g.y, g[model])), 3), "auprc": round(float(average_precision_score(g.y, g[model])), 3), "calibration_slope": sl, "calibration_intercept": ic, "flag_rate": round(float(f.mean()), 3), "sensitivity": round(float(g.y[f].sum()/max(g.y.sum(),1)), 3), "ppv": round(float(g.y[f].mean()), 3) if f.sum() else None}
+            thr_m = float(np.quantile(df[model], 0.8)); fns = {"auroc": roc_auc_score, "auprc": average_precision_score, "calibration_slope": lambda yy, pp: calib(yy, pp)[0], "calibration_intercept": lambda yy, pp: calib(yy, pp)[1], "sensitivity": lambda yy, pp: yy[pp >= thr_m].sum()/max(yy.sum(),1), "ppv": lambda yy, pp: yy[pp >= thr_m].mean() if (pp >= thr_m).sum() else np.nan, "flag_rate": lambda yy, pp: (pp >= thr_m).mean()}
+            rec[model] = {"auroc": round(float(roc_auc_score(g.y, g[model])), 3), "auprc": round(float(average_precision_score(g.y, g[model])), 3), "calibration_slope": sl, "calibration_intercept": ic, "flag_rate": round(float(f.mean()), 3), "sensitivity": round(float(g.y[f].sum()/max(g.y.sum(),1)), 3), "ppv": round(float(g.y[f].mean()), 3) if f.sum() else None, "ci": boot_ci(g.y.values.astype(int), g[model].values, g.person_id.values, fns, B=300)}
         out["groups"][dim]["levels"][str(lev)] = rec
     # bootstrap differences vs reference for the full model (sensitivity and PPV at threshold)
     for lev in out["groups"][dim]["levels"]:

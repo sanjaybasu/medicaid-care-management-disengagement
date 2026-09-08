@@ -6,6 +6,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score, average_precision_score
+import sys; sys.path.insert(0, 'scripts'); from _boot import boot_ci
 D = pathlib.Path("data_cache"); R = pathlib.Path("results"); HP = json.load(open(R/"hyperparameters.json"))["gbm"]
 F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet"); df = F.merge(O[["decision_id","eligible","y_primary"]], on="decision_id"); df = df[df.eligible == 1].reset_index(drop=True)
 STRUCT = ["age","risk_percentile","tier1_flg","days_from_zd","days_since_last_adt"] + [f"adt_all_prior_{w}d" for w in [30,90,180,365]] + [c for c in ["diabetes","htn","chf","copd","sud","any_bh","mdd","asthma","polypharmacy","high_ed_ip","no_pcp_last_10mo"] if c in df.columns]
@@ -15,7 +16,9 @@ n_struct = len(STRUCT) + pd.get_dummies(df[["gender","race","state"]].fillna("u"
 Xtr, Xte = np.load(D/"X5_tr.npy"), np.load(D/"X5_te.npy"); tr = (df.training_era == 1).values; y = df.y_primary.values; ytr, yte = y[tr], y[~tr]
 assert Xtr.shape[1] == n_struct + n_hist + n_lt + 128 + 2, (Xtr.shape, n_struct, n_hist, n_lt)
 blocks = {"structured": np.arange(0, n_struct), "contact_history": np.arange(n_struct, n_struct+n_hist), "lexicon_and_tags": np.arange(n_struct+n_hist, n_struct+n_hist+n_lt), "note_embeddings": np.arange(n_struct+n_hist+n_lt, n_struct+n_hist+n_lt+128), "tfidf_note_stack": np.arange(Xtr.shape[1]-2, Xtr.shape[1])}
-def ev(a, b): return {"auroc": round(float(roc_auc_score(yte, b)), 4), "auprc": round(float(average_precision_score(yte, b)), 4)}
+IDS = df.person_id.values[~tr]
+def ev(a, b):
+    c = boot_ci(yte, b, IDS, {"auroc": roc_auc_score, "auprc": average_precision_score}, B=300); return {"auroc": round(float(roc_auc_score(yte, b)), 4), "auprc": round(float(average_precision_score(yte, b)), 4), "auroc_ci_95": c["auroc"]["ci_95"], "auprc_ci_95": c["auprc"]["ci_95"]}
 full = HistGradientBoostingClassifier(**HP).fit(Xtr, ytr).predict_proba(Xte)[:,1]; out = {"full_model": ev(None, full), "leave_one_group_out": {}, "only_one_group": {}}
 for g, cols in blocks.items():
     keep = np.setdiff1d(np.arange(Xtr.shape[1]), cols); p = HistGradientBoostingClassifier(**HP).fit(Xtr[:, keep], ytr).predict_proba(Xte[:, keep])[:,1]; r = ev(None, p); r["auprc_drop"] = round(out["full_model"]["auprc"] - r["auprc"], 4); r["auroc_drop"] = round(out["full_model"]["auroc"] - r["auroc"], 4); out["leave_one_group_out"][g] = r; print("without", g, r, flush=True)

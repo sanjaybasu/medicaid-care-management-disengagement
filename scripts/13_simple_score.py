@@ -3,6 +3,7 @@ Writes results/simple_score.json."""
 import json, pathlib, numpy as np, pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, average_precision_score, brier_score_loss
+import sys; sys.path.insert(0, 'scripts'); from _boot import boot_ci
 D = pathlib.Path("data_cache"); R = pathlib.Path("results")
 F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet"); df = F.merge(O[["decision_id","eligible","y_primary"]], on="decision_id"); df = df[df.eligible == 1].reset_index(drop=True)
 P = pd.read_parquet(D/"test_predictions.parquet").set_index("decision_id")
@@ -19,4 +20,8 @@ out = {"predictors": list(X.columns), "coefficients": {k: round(float(v), 3) for
        "points_score": {"auroc": round(float(roc_auc_score(y[te], score)), 4), "auprc": round(float(average_precision_score(y[te], score)), 4), "at_20pct_flagged": nb20(y[te], score), "score_range": [int(score.min()), int(score.max())]}}
 Pt = P.loc[df.decision_id[te]]; m0, m5 = average_precision_score(Pt.y, Pt.M0_signal_risk), average_precision_score(Pt.y, Pt.M5_full)
 out["share_of_full_model_gain_over_M0_captured"] = {"logistic": round(float((out["logistic"]["auprc"] - m0)/(m5 - m0)), 3), "points_score": round(float((out["points_score"]["auprc"] - m0)/(m5 - m0)), 3)}
+ids = df.person_id.values[te]
+def fl(yy, pp): thr = np.quantile(pp, 0.8); f = pp >= thr; return {"per_100_flags": 100*yy[f].mean(), "sensitivity": yy[f].sum()/max(yy.sum(),1)}
+fns = {"auroc": roc_auc_score, "auprc": average_precision_score, "per_100_flags": lambda yy, pp: fl(yy, pp)["per_100_flags"], "sensitivity": lambda yy, pp: fl(yy, pp)["sensitivity"]}
+out["ci"] = {"logistic": boot_ci(y[te], p, ids, fns), "points_score": boot_ci(y[te], score.astype(float), ids, fns)}
 json.dump(out, open(R/"simple_score.json", "w"), indent=1); print(json.dumps(out, indent=1))

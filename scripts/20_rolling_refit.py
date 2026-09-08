@@ -40,7 +40,7 @@ pool = (df.enc_date > Q[0]).values; p_refit = np.full(len(df), np.nan); f_refit 
 for i, q in enumerate(Q):
     hi = Q[i+1] if i+1 < len(Q) else END + pd.Timedelta(days=1); te = ((df.enc_date > q) & (df.enc_date <= hi)).values
     if te.sum() == 0: continue
-    p, thr, ntr = fit_score(q, te); p_refit[te] = p; f_refit[te] = p >= thr; byq[str(q.date())] = {"train_n": ntr, **{k: (round(float(v), 4) if isinstance(v, float) else v) for k, v in metrics(y[te], p, p >= thr).items()}}; print("refit", q.date(), byq[str(q.date())], flush=True)
+    p, thr, ntr = fit_score(q, te); p_refit[te] = p; f_refit[te] = p >= thr; byq[str(q.date())] = {"train_n": ntr, **with_ci(y[te], p, p >= thr, df.person_id.values[te], B=300)}; print("refit", q.date(), byq[str(q.date())]["auroc"], flush=True)
 p_frozen, thr_f, ntr_f = fit_score(Q[0], pool); f_frozen = p_frozen >= thr_f
 out = {"design": "quarterly refit: model retrained at each quarter-end on decision points dated at least 90 days earlier and applied to the following quarter; frozen: model trained at 2025-03-31 applied to every later decision point; both evaluated on the same pooled decision points after 2025-03-31", "pooled_n": int(pool.sum()), "refit_quarterly": with_ci(y[pool], p_refit[pool], f_refit[pool], df.person_id.values[pool]), "frozen_2025_03_31": with_ci(y[pool], p_frozen, f_frozen, df.person_id.values[pool]), "refit_by_quarter": byq}
 # frozen headline landmark with intervals
@@ -50,5 +50,5 @@ out["frozen_by_quarter"] = {}
 for i, q in enumerate(Q):
     hi = Q[i+1] if i+1 < len(Q) else END + pd.Timedelta(days=1); te_q = ((df.enc_date > q) & (df.enc_date <= hi)).values[pool]
     if te_q.sum() == 0: continue
-    out["frozen_by_quarter"][str(q.date())] = {k: (round(float(v), 4) if isinstance(v, float) else v) for k, v in metrics(y[pool][te_q], p_frozen[te_q], f_frozen[te_q]).items()}
+    out["frozen_by_quarter"][str(q.date())] = with_ci(y[pool][te_q], p_frozen[te_q], f_frozen[te_q], df.person_id.values[pool][te_q], B=300)
 json.dump(out, open(R/"rolling_refit.json", "w"), indent=1, default=str); print(json.dumps({k: out[k] for k in ["refit_quarterly","frozen_2025_03_31","frozen_2025_11_30_with_ci"]}, indent=1, default=str))

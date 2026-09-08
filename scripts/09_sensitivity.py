@@ -6,6 +6,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import roc_auc_score, average_precision_score
+import sys; sys.path.insert(0, 'scripts'); from _boot import boot_ci, std_fns
+import numpy as np
 D = pathlib.Path("data_cache"); R = pathlib.Path("results"); HP = json.load(open(R/"hyperparameters.json"))["gbm"]
 F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet")
 df = F.merge(O.drop(columns=["person_id","enc_date","training_era","state"]), on="decision_id"); df["enc_date"] = pd.to_datetime(df.enc_date)
@@ -20,8 +22,14 @@ def run(d, tr, te, ycol, extra=()):
     for a, b in GroupKFold(5).split(Xt, y[tr], d.person_id.values[tr]): oof[b] = LogisticRegression(C=0.5, max_iter=3000).fit(Xt[a], y[tr][a]).predict_proba(Xt[b])[:,1]
     pte = LogisticRegression(C=0.5, max_iter=3000).fit(Xt, y[tr]).predict_proba(Xte)[:,1]
     p3 = HistGradientBoostingClassifier(**HP).fit(np.column_stack([X[tr], oof]), y[tr]).predict_proba(np.column_stack([X[te], pte]))[:,1]
-    m = lambda p: {"auroc": round(float(roc_auc_score(y[te], p)), 4), "auprc": round(float(average_precision_score(y[te], p)), 4)}
-    return {"n_train": int(tr.sum()), "n_test": int(te.sum()), "test_event_rate": round(float(y[te].mean()), 4), "M2_structured_history": m(p2), "M3_plus_tfidf_text": m(p3), "auprc_gain_text": round(float(average_precision_score(y[te], p3) - average_precision_score(y[te], p2)), 4)}
+    ids = d.person_id.values[te]; fns = {"auroc": roc_auc_score, "auprc": average_precision_score}
+    m2 = boot_ci(y[te], p2, ids, fns); m3 = boot_ci(y[te], p3, ids, fns)
+    # gain interval: paired bootstrap of the difference
+    rng = np.random.default_rng(20260908); up = np.unique(ids); idx = {q: np.where(ids == q)[0] for q in up}; g = []
+    for _ in range(300):
+        ix = np.concatenate([idx[q] for q in rng.choice(up, len(up))]); yy = y[te][ix]
+        if yy.min() != yy.max(): g.append(average_precision_score(yy, p3[ix]) - average_precision_score(yy, p2[ix]))
+    return {"n_train": int(tr.sum()), "n_test": int(te.sum()), "test_event_rate": round(float(y[te].mean()), 4), "M2_structured_history": {k: v["estimate"] for k, v in m2.items()}, "M3_plus_tfidf_text": {k: v["estimate"] for k, v in m3.items()}, "ci": {"M2_structured_history": m2, "M3_plus_tfidf_text": m3}, "auprc_gain_text": round(float(average_precision_score(y[te], p3) - average_precision_score(y[te], p2)), 4), "auprc_gain_text_ci_95": [round(float(np.percentile(g, 2.5)), 4), round(float(np.percentile(g, 97.5)), 4)]}
 out = {}
 base = df[df.eligible == 1].reset_index(drop=True); tr = (base.training_era == 1).values
 out["base_eligible60_activation_split"] = run(base, tr, ~tr, "y_primary")

@@ -319,6 +319,8 @@ if RF:
 json.dump(canon, open(R/"canonical.json", "w"), indent=1, default=str); print("intervals, ablation, refit rendered")
 
 # ======================= Blinded physician review =======================
+RS = J("roster_scope.json")
+if RS: canon["roster_scope"] = RS; canon["generated_from"].append("roster_scope.json"); canon["derived"]["roster"] = {"pcp_count": RS["total"]["pcp_count"], "active_tins": RS["total"]["active_tins"], "active_provider_entities": RS["total"]["active_provider_entities"], "as_of": RS["as_of"], "by_state": {k: v for k, v in RS["by_state"].items()}}
 SC = J("program_scope.json")
 if SC: canon["program_scope"] = SC; canon["generated_from"].append("program_scope.json"); canon["derived"]["scope"] = {k: SC[k] for k in ["eligible_members","members_with_assigned_pcp","distinct_assigned_pcp_npi","distinct_attributed_pcp_npi","distinct_assigned_tin","distinct_partner_entities","distinct_markets"]}; canon["derived"]["scope"]["pct_with_assigned_pcp"] = round(100*SC["members_with_assigned_pcp"]/SC["eligible_members"], 1)
 PR = J("physician_review.json")

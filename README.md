@@ -38,6 +38,8 @@ Run in order from this directory with the project Python environment. No script 
 
 Every figure and table in the manuscript is rendered by `scripts/08_report.py` from `results/canonical.json`, which is written locally by the pipeline; no results, data, notes, or embeddings are stored in this repository. `audit_consistency.py` exits non-zero if any number in the manuscript, memo, or tables cannot be derived from that file.
 
+Program-scope descriptors in the manuscript (contracted clinicians, practice organizations, and partner entities) come from the program's internal provider roster as of 20 January 2026, recorded in the local results file and not released.
+
 ## Pre-registration
 
 `PREREGISTRATION_v3_disengagement.md` and `PREREGISTRATION_amendment_v3_1.md` (dated 2026-09-08) fixed the outcome, predictors, models, contrasts, validation design, lever gates, and reporting plan before test-era analysis. Section 10 records deviations with dates.

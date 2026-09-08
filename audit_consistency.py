@@ -58,7 +58,9 @@ if PH:
     must(MS+APP, "manuscript+appendix(physician)", n(PH["forms"]), f"{min(k.values()):.2f}", f"{max(k.values()):.2f}", f"{min(kh.values()):.2f}", f"{max(kh.values()):.2f}", f"{PH['fleiss_q1_core']:.2f}", f"{PH['icc_prognosis_all']:.2f}", f(PH["auroc_model_cases"]), f(PH["auroc_physician_all"]), pc(PH["any_open_need_y1_all"]), pc(PH["any_open_need_y0_all"]), pc(PH["harm_high_y1_all"]), pc(PH["harm_high_y0_all"]), str(PH["phase2_n_all"]), pc(p2["lost_contact"]), pc(p2["needs_met"]), pc(p2["administrative_or_coverage"]), f"{ws['bottom_3_deciles']:.2f}", f"{ws['top_decile']:.2f}", f"{mw['bottom_3_deciles']:.2f}", f"{mw['top_decile']:.2f}")
 
 SC = D.get("scope")
-if SC: must(MS, "manuscript(scope)", n(SC["distinct_assigned_pcp_npi"]), str(SC["distinct_assigned_tin"]), str(SC["distinct_partner_entities"]), str(SC["distinct_markets"]), f"{SC['pct_with_assigned_pcp']}%")
+if SC: must(MS, "manuscript(scope)", n(SC["distinct_assigned_pcp_npi"]))
+RS = D.get("roster")
+if RS: must(MS, "manuscript(roster)", n(RS["pcp_count"]), str(RS["active_tins"]), str(RS["active_provider_entities"]), str(RS["by_state"]["Virginia"]["pcp_count"]), str(RS["by_state"]["Washington"]["pcp_count"]), n(RS["by_state"]["Ohio"]["pcp_count"]))
 # ---------- (B) reverse: every numeric token must be derivable
 vals = set()
 def walk(o):

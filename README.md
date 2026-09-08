@@ -1,5 +1,7 @@
 # Predicting disengagement from Medicaid care management from the multidisciplinary care record
 
+Public repository: https://github.com/sanjaybasu/medicaid-care-management-disengagement
+
 Analysis code for the manuscript of the same title (target: npj Digital Medicine) and the accompanying operations memo. Code only: no patient data, notes, embeddings, or predictions are stored in this repository. `data_cache/` is a local symlink to the protected data environment and is not versioned.
 
 ## Pipeline
@@ -26,9 +28,14 @@ Analysis code for the manuscript of the same title (target: npj Digital Medicine
 | 18 | `scripts/18_metric_cis.py` | `results/metric_cis.json` (full metric set with member-bootstrap intervals; subgroup intervals) |
 | 19 | `scripts/19_ablation.py` | `results/ablation.json` (leave-one-group-out, single-group, logistic regression, hyperparameter variants) |
 | 20 | `scripts/20_rolling_refit.py` | `results/rolling_refit.json` (quarterly refit versus frozen model) |
+| (dry run) | `scripts/adjudicate_reviewer_a.py`, `scripts/test_reviewer_a_adjudication.py` | keyword-rule procedure used to pre-fill one physician reviewer's forms before that reviewer's case-by-case review and approval (documented in Supplementary Note S7) |
 | audit | `audit_consistency.py` | Discrepancy table comparing every number in the manuscript, memo, and tables to `results/canonical.json`; exit code 1 on any mismatch |
 
 Run in order from this directory with the project Python environment. No script writes a literal result; every figure and table is rendered from `results/canonical.json`.
+
+## Reproducibility
+
+Every figure and table in the manuscript is rendered by `scripts/08_report.py` from `results/canonical.json`, which is written locally by the pipeline; no results, data, notes, or embeddings are stored in this repository. `audit_consistency.py` exits non-zero if any number in the manuscript, memo, or tables cannot be derived from that file.
 
 ## Pre-registration
 

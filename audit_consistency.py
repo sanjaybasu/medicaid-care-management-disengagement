@@ -91,6 +91,7 @@ for name, text in scan.items():
         if v in vals or round(v, 4) in {round(x, 4) for x in vals}: continue
         if v >= 1000 and v in vals: continue
         fails.append((name, f"number {tok} not derivable from canonical.json"))
+must(APP, "appendix(lever detail)", n(L["equipoise_dps"]), str(L["switcher_patients"]), str(L["informative_patients"]), n(L["informative_dps"]), f"{L['within_patient_fe']['odds_ratio']:.2f}", f"{L['msm_iptw']['odds_ratio']:.2f}")
 # ---------- report
 print("| document | missing or non-derivable |\n|---|---|")
 for a, b in fails: print(f"| {a} | {b} |")

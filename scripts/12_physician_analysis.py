@@ -27,12 +27,16 @@ if len(core) >= 10:
     sub = f1[f1.case_id.isin(core)]; cats = sorted(sub.q1_engagement_status.dropna().unique()); tab = np.array([[ (sub[sub.case_id == c].q1_engagement_status == k).sum() for k in cats] for c in core]); out["fleiss_kappa_q1_core"] = round(fleiss(tab), 3)
 # physician prognosis vs model on the same cases (mean prognosis per case; reversed so higher = more likely to disengage)
 m = f1.groupby("case_id").q2_prognosis_1to5.mean().reset_index().merge(key, on="case_id"); m["phys_risk"] = 6 - m.q2_prognosis_1to5
-rng = np.random.default_rng(20260908); diffs = []
+rng = np.random.default_rng(20260908); diffs = []; bp = []; bm = []; bst = {st: {"p": [], "m": []} for st in m.stratum.unique()}
 for _ in range(1000):
     ix = rng.integers(0, len(m), len(m)); b = m.iloc[ix]
-    if b.y.nunique() == 2: diffs.append(roc_auc_score(b.y, b.M5_full) - roc_auc_score(b.y, b.phys_risk))
+    if b.y.nunique() == 2: diffs.append(roc_auc_score(b.y, b.M5_full) - roc_auc_score(b.y, b.phys_risk)); bp.append(roc_auc_score(b.y, b.phys_risk)); bm.append(roc_auc_score(b.y, b.M5_full))
+    for st, gg in b.groupby("stratum"):
+        if gg.y.nunique() == 2: bst[st]["p"].append(roc_auc_score(gg.y, gg.phys_risk)); bst[st]["m"].append(roc_auc_score(gg.y, gg.M5_full))
+def pci(v): return [round(float(np.percentile(v, 2.5)), 3), round(float(np.percentile(v, 97.5)), 3)]
 out["prognosis_auroc_within_stratum_all"] = {st: round(float(roc_auc_score(gg.y, gg.phys_risk)), 3) for st, gg in m.groupby("stratum") if gg.y.nunique() == 2}; out["model_auroc_within_stratum"] = {st: round(float(roc_auc_score(gg.y, gg.M5_full)), 3) for st, gg in m.groupby("stratum") if gg.y.nunique() == 2}
-out["prognosis_vs_model"] = {"n_cases": int(len(m)), "auroc_physician": round(float(roc_auc_score(m.y, m.phys_risk)), 3), "auroc_model": round(float(roc_auc_score(m.y, m.M5_full)), 3), "difference_model_minus_physician": round(float(roc_auc_score(m.y, m.M5_full) - roc_auc_score(m.y, m.phys_risk)), 3), "ci_95": [round(float(np.percentile(diffs, 2.5)), 3), round(float(np.percentile(diffs, 97.5)), 3)], "note": "sampled cases are stratified by risk and outcome; AUROC is comparable between raters on the same cases but not to the population AUROC"}
+out["prognosis_auroc_within_stratum_all_ci"] = {st: pci(v["p"]) for st, v in bst.items() if v["p"]}; out["model_auroc_within_stratum_ci"] = {st: pci(v["m"]) for st, v in bst.items() if v["m"]}
+out["prognosis_vs_model"] = {"n_cases": int(len(m)), "auroc_physician": round(float(roc_auc_score(m.y, m.phys_risk)), 3), "auroc_physician_ci_95": pci(bp), "auroc_model": round(float(roc_auc_score(m.y, m.M5_full)), 3), "auroc_model_ci_95": pci(bm), "difference_model_minus_physician": round(float(roc_auc_score(m.y, m.M5_full) - roc_auc_score(m.y, m.phys_risk)), 3), "ci_95": [round(float(np.percentile(diffs, 2.5)), 3), round(float(np.percentile(diffs, 97.5)), 3)], "note": "sampled cases are stratified by risk and outcome; AUROC is comparable between raters on the same cases but not to the population AUROC"}
 need_cols = [c for c in f1.columns if c.startswith("q3_")]; agg = f1.groupby("case_id")[need_cols + ["q2_prognosis_1to5"]].mean().reset_index().merge(key[["case_id","y","stratum"]], on="case_id")
 agg["harm_high"] = f1.assign(h=(f1.q4_harm_if_lost == "high").astype(float)).groupby("case_id").h.mean().values
 out["open_need_and_harm_by_outcome"] = {f"y{yv}": {c: round(float(agg.loc[agg.y == yv, c].mean()), 3) for c in need_cols + ["harm_high"]} for yv in (1, 0)}
@@ -54,7 +58,11 @@ for rev, g in f1.groupby("reviewer"):
 out["leave_one_reviewer_out"] = {}
 for rev in "ABC":
     sub = f1[f1.reviewer != rev]; m2 = sub.groupby("case_id").q2_prognosis_1to5.mean().reset_index().merge(key, on="case_id"); m2["phys_risk"] = 6 - m2.q2_prognosis_1to5
-    out["leave_one_reviewer_out"][f"without_{rev}"] = {"n_cases": int(len(m2)), "auroc_physician": round(float(roc_auc_score(m2.y, m2.phys_risk)), 3), "auroc_model": round(float(roc_auc_score(m2.y, m2.M5_full)), 3), "kappa_q1": pairwise_kappa(sub, "q1_engagement_status"), "kappa_q4": pairwise_kappa(sub, "q4_harm_if_lost")}
+    r2 = np.random.default_rng(20260908); b2p, b2m = [], []
+    for _ in range(1000):
+        ix = r2.integers(0, len(m2), len(m2)); b = m2.iloc[ix]
+        if b.y.nunique() == 2: b2p.append(roc_auc_score(b.y, b.phys_risk)); b2m.append(roc_auc_score(b.y, b.M5_full))
+    out["leave_one_reviewer_out"][f"without_{rev}"] = {"n_cases": int(len(m2)), "auroc_physician": round(float(roc_auc_score(m2.y, m2.phys_risk)), 3), "auroc_physician_ci_95": pci(b2p), "auroc_model": round(float(roc_auc_score(m2.y, m2.M5_full)), 3), "auroc_model_ci_95": pci(b2m), "kappa_q1": pairwise_kappa(sub, "q1_engagement_status"), "kappa_q4": pairwise_kappa(sub, "q4_harm_if_lost")}
 # reasons by reviewer (phase 2)
 if f2 is not None: out["phase2_reasons_by_reviewer"] = {rev: g.reason.value_counts(normalize=True).round(3).to_dict() for rev, g in f2.groupby("reviewer")}
 json.dump(out, open(R/"physician_review.json", "w"), indent=1, default=str)

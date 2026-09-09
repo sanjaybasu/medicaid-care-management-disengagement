@@ -6,7 +6,7 @@ Exit code 1 and a discrepancy table if any check fails. Usage: python audit_cons
 import json, re, sys, pathlib
 R = pathlib.Path("results"); NB = pathlib.Path("../../notebooks/care-management-disengagement")
 C = json.load(open(R/"canonical.json")); S = json.load(open(R/"sensitivity.json")) if (R/"sensitivity.json").exists() else {}
-MS = (NB/"manuscript_disengagement_prediction_npjDigitalMedicine.md").read_text(); MEMO = (NB/"ops_memo_disengagement_flags.md").read_text()
+MS = (NB/"manuscript_disengagement_prediction_DigitalHealth.md").read_text(); MEMO = (NB/"ops_memo_disengagement_flags.md").read_text()
 APP = (NB/"supplementary_appendix.md").read_text() if (NB/"supplementary_appendix.md").exists() else ""
 TABS = "\n".join(p.read_text() for p in sorted((NB/"tables").glob("*.md")))
 M = C["models"]["models"]; K = C["models"]["contrasts"]; F = C["flow"]; D = C["derived"]; SG = C["subgroups"]; L = C["levers"]["exposures"]["L1_inperson"]; SEQ = C["sequence_models"]
@@ -82,7 +82,7 @@ def tokens(text):
     return re.findall(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w])|(?<![\w.])\d+\.\d+(?![\w])|(?<![\w.])\d+(?=%)", text)
 ALLOW = {"95","80","2,000","0.129","0.05","0.60","0.10","0.90","10","20","30","50","0.1","1.25","1.5","2.0","45","46.116","164.512","60","90","30","120","365","31","181","180","91","0.03","2.0","15","40","400","20260907","768","384","64","32","41","10","5","3","256","0.5","50,000","1,000","6,000","200","110,671","73.5","438.208","20253751","2.5","97.5","1.0","0.75","0.6","0.8","4.4","0.02","0.2","1,890","93,379","40,732","0.753","0.787","0.64","0.66","0.034"}
 def section(text, a, b): return text.split(a, 1)[1].split(b, 1)[0] if a in text else ""
-scan = {"appendix-supplementary-results": section(APP, "## Supplementary Results", "## Supplementary Table S1"), "manuscript-abstract": section(MS, "## Abstract", "## Introduction"), "manuscript-results": section(MS, "## Results", "## Discussion"), "manuscript-discussion": section(MS, "## Discussion", "## Methods"), "manuscript-legends": section(MS, "## Figure legends", "## Tables"), "memo": MEMO}
+scan = {"appendix-supplementary-results": section(APP, "## Supplementary Results", "## Supplementary Table S1"), "manuscript-abstract": section(MS, "## Abstract", "## Introduction"), "manuscript-results": section(MS, "## Results", "## Discussion"), "manuscript-discussion": section(MS, "## Discussion", "## Acknowledgements"), "manuscript-legends": section(MS, "## Figure legends", "## Tables"), "memo": MEMO}
 for name, text in scan.items():
     for tok in tokens(text):
         if tok in ALLOW: continue

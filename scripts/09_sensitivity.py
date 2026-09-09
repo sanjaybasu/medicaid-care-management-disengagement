@@ -31,13 +31,12 @@ def run(d, tr, te, ycol, extra=()):
         if yy.min() != yy.max(): g.append(average_precision_score(yy, p3[ix]) - average_precision_score(yy, p2[ix]))
     return {"n_train": int(tr.sum()), "n_test": int(te.sum()), "test_event_rate": round(float(y[te].mean()), 4), "M2_structured_history": {k: v["estimate"] for k, v in m2.items()}, "M3_plus_tfidf_text": {k: v["estimate"] for k, v in m3.items()}, "ci": {"M2_structured_history": m2, "M3_plus_tfidf_text": m3}, "auprc_gain_text": round(float(average_precision_score(y[te], p3) - average_precision_score(y[te], p2)), 4), "auprc_gain_text_ci_95": [round(float(np.percentile(g, 2.5)), 4), round(float(np.percentile(g, 97.5)), 4)]}
 out = {}
+cut = pd.Timestamp("2025-07-01"); df = df[~((df.training_era == 1) & (df.enc_date >= cut))].reset_index(drop=True)  # training contacts before the test era only, as in the main analysis
 base = df[df.eligible == 1].reset_index(drop=True); tr = (base.training_era == 1).values
-out["base_eligible60_activation_split"] = run(base, tr, ~tr, "y_primary")
-e90 = df[df.enrolled_days_90 >= 90].reset_index(drop=True); tr90 = (e90.training_era == 1).values
-out["eligibility_90_enrolled_days"] = run(e90, tr90, ~tr90, "y_primary")
+out["base_eligible90_temporal_split"] = run(base, tr, ~tr, "y_primary")
+e60 = df[df.enrolled_days_90 >= 60].reset_index(drop=True); tr60 = (e60.training_era == 1).values
+out["eligibility_60_enrolled_days"] = run(e60, tr60, ~tr60, "y_primary")
 alld = df.reset_index(drop=True); tra = (alld.training_era == 1).values
 out["no_eligibility_restriction_enrollment_covariate"] = run(alld, tra, ~tra, "y_primary", extra=("enrolled_days_90",))
-cut = pd.Timestamp("2025-07-01"); trc = ((base.training_era == 1) & (base.enc_date < cut)).values; tec = (base.training_era == 0).values
-out["training_contacts_before_2025_07_01_only"] = run(base, trc, tec, "y_primary")
 for yc in ["y_30", "y_silent", "y_explicit"]: out[f"outcome_{yc}"] = run(base, tr, ~tr, yc)
 json.dump(out, open(R/"sensitivity.json", "w"), indent=1); print(json.dumps(out, indent=1))

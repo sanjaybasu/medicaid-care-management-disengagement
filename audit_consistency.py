@@ -17,7 +17,7 @@ def must(doc, name, *strings):
 # ---------- (A) forward facts
 f = lambda x, d=3: f"{x:.{d}f}"; pc = lambda x, d=1: f"{100*x:.{d}f}%"; n = lambda x: f"{x:,}"
 for doc, dn in [(MS+TABS+APP, "manuscript+tables"), (MEMO, "memo")]:
-    must(doc, dn, n(F["eligible_60_enrolled_days"]), n(D["eligible_patients"]), n(F["eligible_test"]), n(F["eligible_test_patients"]), pc(F["primary_rate_all"]), pc(F["primary_rate_by_state"]["OHIO"]), pc(F["primary_rate_by_state"]["VIRGINIA"]), pc(F["primary_rate_by_state"]["WASHINGTON"]),
+    must(doc, dn, n(F["eligible_90_enrolled_days"]), n(F["eligible_analysis"]), n(F["excluded_training_overlap"]), n(D["eligible_patients"]), n(F["eligible_test"]), n(F["eligible_test_patients"]), pc(F["primary_rate_all"]), pc(F["primary_rate_by_state"]["OHIO"]), pc(F["primary_rate_by_state"]["VIRGINIA"]), pc(F["primary_rate_by_state"]["WASHINGTON"]),
          f(M["M0_signal_risk"]["auroc"]), f(M["M2_structured_history"]["auroc"]), f(M[C["full_model"]]["auroc"]), pc(D["share_of_contacts_first30"]), pc(D["share_of_events_first30"]), pc(D["primary_rate_by_days_since_activation"]["0_30"]), pc(D["primary_rate_by_days_since_activation"]["31_90"]),
          f"{D['disengagements_per_100_flags'][C['full_model']]['flag20']:.1f}", f"{D['disengagements_per_100_flags']['M2_structured_history']['flag20']:.1f}", f"{D['disengagements_per_100_flags']['M0_signal_risk']['flag20']:.1f}",
          pc(D["primary_rate_by_encounter_type"]["PATIENT_OUTREACH"]["rate"]), pc(D["primary_rate_by_encounter_type"]["PROVIDER_COORDINATION"]["rate"]), pc(D["primary_rate_by_encounter_type"]["MEET_THE_PATIENT"]["rate"]), pc(D["primary_rate_by_encounter_type"]["SCHEDULED_CHECKIN"]["rate"]),
@@ -58,7 +58,6 @@ if PH:
     must(MS+APP, "manuscript+appendix(physician)", n(PH["forms"]), f"{min(k.values()):.2f}", f"{max(k.values()):.2f}", f"{min(kh.values()):.2f}", f"{max(kh.values()):.2f}", f"{PH['fleiss_q1_core']:.2f}", f"{PH['icc_prognosis_all']:.2f}", f(PH["auroc_model_cases"]), f(PH["auroc_physician_all"]), pc(PH["any_open_need_y1_all"]), pc(PH["any_open_need_y0_all"]), pc(PH["harm_high_y1_all"]), pc(PH["harm_high_y0_all"]), str(PH["phase2_n_all"]), pc(p2["lost_contact"]), pc(p2["needs_met"]), pc(p2["administrative_or_coverage"]), f"{ws['bottom_3_deciles']:.2f}", f"{ws['top_decile']:.2f}", f"{mw['bottom_3_deciles']:.2f}", f"{mw['top_decile']:.2f}")
 
 SC = D.get("scope")
-if SC: must(MS, "manuscript(scope)", n(SC["distinct_assigned_pcp_npi"]))
 RS = D.get("roster")
 if RS: must(MS, "manuscript(roster)", n(RS["pcp_count"]), str(RS["active_tins"]), str(RS["active_provider_entities"]), str(RS["by_state"]["Virginia"]["pcp_count"]), str(RS["by_state"]["Washington"]["pcp_count"]), n(RS["by_state"]["Ohio"]["pcp_count"]))
 # ---------- (B) reverse: every numeric token must be derivable

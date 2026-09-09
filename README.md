@@ -18,7 +18,7 @@ Analysis code for the manuscript of the same title (target: npj Digital Medicine
 | 8 | `scripts/08_report.py` | `results/canonical.json`; figures and tables in `../../notebooks/care-management-disengagement/` |
 | 9 | `scripts/09_sensitivity.py` | `results/sensitivity.json` (eligibility, calendar split, outcome definition) |
 | 10 | `scripts/10_landmark.py` | `results/landmark.json` (frozen-model rolling-landmark validation) |
-| 11 | `scripts/11_physician_sample.py` | blinded physician review packets and forms in `data_cache/physician_review/` (PHI, local only); `results/physician_sample_meta.json` (counts) |
+| 11 | `scripts/11_physician_sample.py` (v2, single phase: 100 disengaged and 100 program-completion index contacts; forms completed by the physicians) | blinded physician review packets and forms in `data_cache/physician_review/` (PHI, local only); `results/physician_sample_meta.json` (counts) |
 | 12 | `scripts/12_physician_analysis.py` | `results/physician_review.json` (run after forms are returned) |
 | 13 | `scripts/13_simple_score.py` | `results/simple_score.json` (eight-predictor points score) |
 | 14 | `scripts/14_levers2.py` | `results/levers2.json` (second contact within 7 days; same-person continuity) |
@@ -42,6 +42,9 @@ Every figure and table in the manuscript is rendered by `scripts/08_report.py` f
 Program-scope descriptors in the manuscript (contracted clinicians, practice organizations, and partner entities) come from the program's internal provider roster as of 20 January 2026, recorded in the local results file and not released.
 
 ## Pre-registration
+
+Amendment v3.2 (`PREREGISTRATION_amendment_v3_2.md`, 2026-09-09) fixes the 90-of-90-day enrollment rule, the temporal split (training contacts dated before 2025-07-01 only), the single-phase blinded physician review of clinical stakes, and the reporting changes (confusion matrix, Youden comparison, equalized odds). The two-phase physician review of v3.1 and its dry-run adjudication script are superseded (`scripts/superseded_*`).
+
 
 `PREREGISTRATION_v3_disengagement.md` and `PREREGISTRATION_amendment_v3_1.md` (dated 2026-09-08) fixed the outcome, predictors, models, contrasts, validation design, lever gates, and reporting plan before test-era analysis. Section 10 records deviations with dates.
 

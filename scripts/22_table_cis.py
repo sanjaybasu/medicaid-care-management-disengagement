@@ -39,6 +39,24 @@ for key, nice, levels in groups:
         for m in ["M2_structured_history", "M5_full"]: rec[m] = boot(yP[mk], P[m].values[mk], P.person_id.values[mk], DISC)
         rec["auroc_gain"] = boot(yP[mk], np.column_stack([P.M5_full.values[mk], P.M2_structured_history.values[mk]]), P.person_id.values[mk], {"gain": lambda y, q: roc_auc_score(y, q[:,0]) - roc_auc_score(y, q[:,1])})["gain"]
         out["subgroups"][key][lev] = rec; print(key, lev, rec["M5_full"]["auroc"], flush=True)
+
+# ---- equalized odds at the single overall 20% threshold (true and false positive rates by group; ratio of smallest to largest group value)
+out["equalized_odds"] = {}
+for m in ["M2_structured_history", "M5_full"]:
+    thr = float(np.quantile(P[m].values, 0.8)); fl = (P[m].values >= thr)
+    for dim, levels in [("race", ["Black or African American","White","Hispanic","Asian"]), ("state", ["VIRGINIA","WASHINGTON","OHIO"])]:
+        def rates(mask, f=fl, y=yP):
+            return {lev: (float(f[mask[lev] & (y == 1)].mean()), float(f[mask[lev] & (y == 0)].mean())) for lev in levels}
+        masks = {lev: (P[dim].values == lev) for lev in levels}; pt = rates(masks)
+        eo = lambda r: min(min(v[0] for v in r.values())/max(v[0] for v in r.values()), min(v[1] for v in r.values())/max(v[1] for v in r.values()))
+        up = np.unique(P.person_id.values); ix = {q: np.where(P.person_id.values == q)[0] for q in up}; bs = []; bt = {lev: [] for lev in levels}; bf = {lev: [] for lev in levels}
+        for _ in range(B):
+            s_ = np.concatenate([ix[q] for q in rng.choice(up, len(up))]); mk = {lev: (P[dim].values[s_] == lev) for lev in levels}; r = rates(mk, fl[s_], yP[s_])
+            if any(np.isnan(v[0]) or np.isnan(v[1]) for v in r.values()): continue
+            bs.append(eo(r)); [bt[lev].append(r[lev][0]) for lev in levels]; [bf[lev].append(r[lev][1]) for lev in levels]
+        ci = lambda v: [round(float(np.percentile(v, 2.5)), 3), round(float(np.percentile(v, 97.5)), 3)]
+        out["equalized_odds"][f"{m}:{dim}"] = {"threshold": round(thr, 4), "groups": {lev: {"n": int(masks[lev].sum()), "tpr": round(pt[lev][0], 3), "tpr_ci_95": ci(bt[lev]), "fpr": round(pt[lev][1], 3), "fpr_ci_95": ci(bf[lev])} for lev in levels}, "equalized_odds_ratio": round(eo(pt), 3), "equalized_odds_ratio_ci_95": ci(bs)}
+        print("EO", m, dim, out["equalized_odds"][f"{m}:{dim}"]["equalized_odds_ratio"], flush=True)
 # ---- shared feature construction (scripts 04 and 05)
 F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet")
 df = F.merge(O[["decision_id","eligible","y_primary","y_explicit","y_silent","y_30"]], on="decision_id"); df = df[df.eligible == 1].reset_index(drop=True); df["enc_date"] = pd.to_datetime(df.enc_date)

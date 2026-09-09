@@ -20,7 +20,12 @@ for m in MODELS:
     p = P[m].values; thr = float(np.quantile(p, 0.8)); pt = allm(y, p, thr); bs = {k: [] for k in pt}
     for ix in boots:
         r = allm(y[ix], p[ix], thr); [bs[k].append(v) for k, v in r.items()]
-    out["models"][m] = {k: {"estimate": round(float(v), 4), "ci_95": [round(float(np.percentile(bs[k], 2.5)), 4), round(float(np.percentile(bs[k], 97.5)), 4)]} for k, v in pt.items()}; out["models"][m]["threshold"] = round(thr, 4); print(m, {k: (out['models'][m][k]['estimate'], out['models'][m][k]['ci_95']) for k in ['auroc','auprc','sensitivity','specificity','f1']}, flush=True)
+    out["models"][m] = {k: {"estimate": round(float(v), 4), "ci_95": [round(float(np.percentile(bs[k], 2.5)), 4), round(float(np.percentile(bs[k], 97.5)), 4)]} for k, v in pt.items()}; out["models"][m]["threshold"] = round(thr, 4)
+    fl = p >= thr; out["models"][m]["confusion"] = {"tp": int((fl & (y == 1)).sum()), "fp": int((fl & (y == 0)).sum()), "fn": int((~fl & (y == 1)).sum()), "tn": int((~fl & (y == 0)).sum()), "flagged": int(fl.sum()), "n": int(len(y))}
+    # Youden-index operating point (threshold maximizing sensitivity + specificity - 1), for comparison with the capacity-based 20% threshold
+    from sklearn.metrics import roc_curve
+    fpr_, tpr_, th_ = roc_curve(y, p); j = int(np.argmax(tpr_ - fpr_)); ty = float(th_[j]); fy = p >= ty
+    out["models"][m]["youden"] = {"threshold": round(ty, 4), "sensitivity": round(float(tpr_[j]), 4), "specificity": round(float(1 - fpr_[j]), 4), "flag_rate": round(float(fy.mean()), 4), "ppv": round(float(y[fy].mean()) if fy.any() else float("nan"), 4)}; print(m, {k: (out['models'][m][k]['estimate'], out['models'][m][k]['ci_95']) for k in ['auroc','auprc','sensitivity','specificity','f1']}, flush=True)
 # decision-point bootstrap for the full model, to show interval width difference
 p = P.M5_full.values; thr = float(np.quantile(p, 0.8)); bsd = {"auroc": [], "auprc": []}
 for ix in boots_dp: bsd["auroc"].append(roc_auc_score(y[ix], p[ix])); bsd["auprc"].append(average_precision_score(y[ix], p[ix]))

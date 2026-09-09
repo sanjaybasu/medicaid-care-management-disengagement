@@ -9,7 +9,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import roc_auc_score, average_precision_score
 D = pathlib.Path("data_cache"); R = pathlib.Path("results"); HP = json.load(open(R/"hyperparameters.json"))["gbm"]
-F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet"); df = F.merge(O[["decision_id","eligible","y_primary"]], on="decision_id"); df = df[df.eligible == 1].reset_index(drop=True); df["enc_date"] = pd.to_datetime(df.enc_date)
+F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet"); df = F.merge(O[["decision_id","eligible_landmark","y_primary"]], on="decision_id"); df = df[df.eligible_landmark == 1].reset_index(drop=True); df["enc_date"] = pd.to_datetime(df.enc_date)
 enc = pd.read_parquet(D/"encounters.parquet")[["person_id","enc_date","note_text"]]; enc["enc_date"] = pd.to_datetime(enc.enc_date); enc = enc.dropna(subset=["enc_date"]).sort_values(["person_id","enc_date"])
 E = {p: (g.enc_date.values, g.note_text.fillna("").values) for p, g in enc.groupby("person_id")}; prior = []
 for r in df.itertuples():

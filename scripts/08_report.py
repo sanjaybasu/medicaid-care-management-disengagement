@@ -288,7 +288,8 @@ if MC:
         for m in ["M0_signal_risk", "M2_structured_history", "M5_full"]:
             v = MC["models"][m]; yj = v["youden"]
             f.write(f"| {LABEL[m]} | 20% of contacts flagged | {v['threshold']:.3f} | {v['flag_rate']['estimate']:.3f} | {v['sensitivity']['estimate']:.3f} | {v['specificity']['estimate']:.3f} | {v['ppv']['estimate']:.3f} |\n| {LABEL[m]} | Youden index | {yj['threshold']:.3f} | {yj['flag_rate']:.3f} | {yj['sensitivity']:.3f} | {yj['specificity']:.3f} | {yj['ppv']:.3f} |\n")
-    canon["derived"]["confusion"] = {m: MC["models"][m]["confusion"] for m in ["M0_signal_risk","M2_structured_history","M5_full"]}; canon["derived"]["youden"] = {m: MC["models"][m]["youden"] for m in ["M0_signal_risk","M2_structured_history","M5_full"]}
+    canon["derived"]["confusion"] = {m: MC["models"][m]["confusion"] for m in ["M0_signal_risk","M2_structured_history","M5_full"]};
+    cf0, cf2, cf5 = (MC["models"][m]["confusion"] for m in ["M0_signal_risk","M2_structured_history","M5_full"]); canon["derived"]["events_captured_ratio_M2_vs_M0_at_20pct"] = round(cf2["tp"]/cf0["tp"], 1); canon["derived"]["events_captured_gain_full_vs_M2_at_20pct_confusion"] = cf5["tp"] - cf2["tp"]; canon["derived"]["per_100_flags_gain_full_vs_M2"] = round(100*(MC["models"]["M5_full"]["ppv"]["estimate"] - MC["models"]["M2_structured_history"]["ppv"]["estimate"]), 1); canon["derived"]["lexicon_tags_share_of_text_auprc_gain_pct"] = round(100*(MC["models"]["M3b_plus_lexicon_tags"]["auprc"]["estimate"] - MC["models"]["M2_structured_history"]["auprc"]["estimate"])/C["full_vs_structured_history"]["auprc"]["diff"]) canon["derived"]["youden"] = {m: MC["models"][m]["youden"] for m in ["M0_signal_risk","M2_structured_history","M5_full"]}
     TC = J("table_cis.json")
     if TC:
         canon["table_cis"] = TC; canon["generated_from"].append("table_cis.json")

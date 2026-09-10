@@ -35,6 +35,7 @@ Analysis code for the manuscript of the same title (target: npj Digital Medicine
 | 24 | `scripts/24_staff_effects.py` | `results/staff_effects.json` (assigned-staff effects with split-sample validation, amendment v3.4) |
 | 25 | `scripts/25_attempts.py` | `results/attempts.json` (logged unsuccessful outreach attempts around decision points; time of day of contacts; needs `data_cache/encounter_times_study.parquet` pulled from lighthouse EncounterNote) |
 | 26 | `scripts/26_bounded_experiments.py` | `results/bounded_experiments.json` (amendment v3.5 experiments K1 to K5: attempt features, continued attempting, attempt timing and channel, who benefits from an early second contact, contacts by attempts) |
+| 27 | `scripts/27_ops_rule.py` | `results/ops_rule.json` (amendment v3.6 operational rule: risk flag, lapsed-and-unattended, predicted return if attempted; confusion matrices and uplift validation) |
 | audit | `audit_consistency.py` | Discrepancy table comparing every number in the manuscript, memo, and tables to `results/canonical.json`; exit code 1 on any mismatch |
 
 Run in order from this directory with the project Python environment. No script writes a literal result; every figure and table is rendered from `results/canonical.json`.

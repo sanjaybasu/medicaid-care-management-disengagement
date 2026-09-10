@@ -22,4 +22,5 @@ run 23_staff_preference_iv.py "" staff_iv
 run 24_staff_effects.py "" staff_effects
 run 25_attempts.py "" attempts
 run 26_bounded_experiments.py "" bounded
+run 27_ops_rule.py "" ops_rule
 echo "=== PIPELINE DONE $(date '+%H:%M:%S')"

@@ -102,6 +102,9 @@ BX = C.get("bounded_experiments")
 if BX:
     k2, k3, k4 = BX["K2_attempts_after_contact"], BX["K3_attempt_timing_channel"], BX.get("K4_who_benefits_early_second_contact", {})
     must(MS+TABS+APP, "manuscript+appendix(bounded)", n(k2["n_episodes"]), n(k2["n_patients"]), f"{100*k2['within_patient_rd_1_attempt']:.1f}", f"{100*k2['within_patient_rd_2plus']:.1f}", n(k3["n_attempts"]), f"{100*k3['within_patient']['weekend']['rd']:.1f}".lstrip("-"), f"{100*k3['within_patient']['morning_8_12']['rd']:.1f}", *( [n(k4["n_equipoise"]), f"{100*abs(k4['difference_top_minus_bottom']):.1f}"] if k4 else []))
+OPS = C.get("ops_rule")
+if OPS:
+    ab_ = OPS["rule_ab_risk_and_lapsed_unattended"]; must(MS+TABS+APP+MEMO, "ops rule", n(ab_["tp"]), n(ab_["fp"]), n(ab_["fn"]), f"{100*ab_['ppv']:.1f}%")
 # ---------- report
 print("| document | missing or non-derivable |\n|---|---|")
 for a, b in fails: print(f"| {a} | {b} |")

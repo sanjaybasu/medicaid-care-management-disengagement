@@ -21,4 +21,5 @@ run 22_table_cis.py "" table_cis
 run 23_staff_preference_iv.py "" staff_iv
 run 24_staff_effects.py "" staff_effects
 run 25_attempts.py "" attempts
+run 26_bounded_experiments.py "" bounded
 echo "=== PIPELINE DONE $(date '+%H:%M:%S')"

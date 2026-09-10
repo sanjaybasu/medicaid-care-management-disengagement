@@ -98,6 +98,10 @@ if SE:
 if SIV: must(MS+APP, "manuscript+appendix(staff iv)", n(SIV["n_patients"]), str(SIV["n_staff"]), *[f"{r['late_rd']:+.2f}" for r in SIV["actions"].values()])
 AT = C.get("attempts")
 if AT: must(MS+APP, "manuscript+appendix(attempts)", f"{AT['disengagements_with_any_attempt_in_90d_pct']}%", f"{AT['disengagements_with_3plus_attempts_pct']}%", f"{AT['explicit_exit_with_any_attempt_pct']}%", f"{AT['silent_loss_with_any_attempt_pct']}%", f"{D['attempts']['dis_no_attempt_pct']}%")
+BX = C.get("bounded_experiments")
+if BX:
+    k2, k3, k4 = BX["K2_attempts_after_contact"], BX["K3_attempt_timing_channel"], BX.get("K4_who_benefits_early_second_contact", {})
+    must(MS+APP, "manuscript+appendix(bounded)", n(k2["n_episodes"]), n(k2["n_patients"]), f"{100*k2['within_patient_rd_1_attempt']:.1f}", f"{100*k2['within_patient_rd_2plus']:.1f}", n(k3["n_attempts"]), f"{100*k3['within_patient']['weekend']['rd']:.1f}".lstrip("-"), f"{100*k3['within_patient']['morning_8_12']['rd']:.1f}", *( [n(k4["n_equipoise"]), f"{100*abs(k4['difference_top_minus_bottom']):.1f}"] if k4 else []))
 # ---------- report
 print("| document | missing or non-derivable |\n|---|---|")
 for a, b in fails: print(f"| {a} | {b} |")

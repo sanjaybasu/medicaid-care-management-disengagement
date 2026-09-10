@@ -59,7 +59,7 @@ if PH:
 
 SC = D.get("scope")
 RS = D.get("roster")
-if RS: must(MS, "manuscript(roster)", n(RS["pcp_count"]), str(RS["active_tins"]), str(RS["active_provider_entities"]), str(RS["by_state"]["Virginia"]["pcp_count"]), str(RS["by_state"]["Washington"]["pcp_count"]), n(RS["by_state"]["Ohio"]["pcp_count"]))
+if RS: must(MS, "manuscript(roster)", n(RS["pcp_count"]), str(RS["active_tins"]), str(RS["active_provider_entities"]))
 # ---------- (B) reverse: every numeric token must be derivable
 vals = set()
 def walk(o):

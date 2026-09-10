@@ -1,0 +1,47 @@
+{
+ "description": "hand-scorable points score; log-transformed counts enter as log(1+x) times the points; flag the 20% of contacts with the highest score",
+ "predictors": [
+  "prior_contacts_90d_log",
+  "days_since_last_contact_log",
+  "first_30_days",
+  "encounter_patient_outreach",
+  "contact_by_coordinator_or_technician",
+  "note_declined",
+  "note_positive_engagement",
+  "open_goals_log"
+ ],
+ "points": {
+  "prior_contacts_90d_log": -7,
+  "days_since_last_contact_log": 0,
+  "first_30_days": -3,
+  "encounter_patient_outreach": 3,
+  "contact_by_coordinator_or_technician": 10,
+  "note_declined": 4,
+  "note_positive_engagement": -3,
+  "open_goals_log": 6
+ },
+ "logistic_coefficients": {
+  "prior_contacts_90d_log": -1.088,
+  "days_since_last_contact_log": -0.036,
+  "first_30_days": -0.394,
+  "encounter_patient_outreach": 0.424,
+  "contact_by_coordinator_or_technician": 1.473,
+  "note_declined": 0.584,
+  "note_positive_engagement": -0.468,
+  "open_goals_log": 0.887
+ },
+ "logistic_intercept": -0.653,
+ "test_performance": {
+  "auroc": 0.8656,
+  "auprc": 0.5642,
+  "at_20pct_flagged": {
+   "per_100_flags": 57.9,
+   "sensitivity": 0.627,
+   "flag_rate": 0.205
+  },
+  "score_range": [
+   -31,
+   26
+  ]
+ }
+}

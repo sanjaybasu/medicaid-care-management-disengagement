@@ -1,0 +1,29 @@
+{
+ "columns_in_order": [
+  "age",
+  "risk_percentile",
+  "days_from_zd",
+  "n_prior_90",
+  "att30",
+  "prior_connect",
+  "state_va",
+  "state_wa",
+  "inp",
+  "any_bh",
+  "adt_all_prior_365d"
+ ],
+ "definitions": {
+  "prior_connect": "share of the patient's last 10 attempts before this contact that were followed by a completed contact within 2 days (-1 if no prior attempts)",
+  "att30": "logged attempts in the 30 days before the contact",
+  "inp": "this contact was in person",
+  "state_va": "state is Virginia",
+  "state_wa": "state is Washington"
+ },
+ "uplift": "predict with both models on the same row; uplift = return_if_attempted - return_if_not_attempted",
+ "median_uplift_among_lapsed_episodes": 0.0881,
+ "tertile_cutpoints": [
+  0.047,
+  0.1303
+ ],
+ "n_lapsed_episodes_fit": 19781
+}

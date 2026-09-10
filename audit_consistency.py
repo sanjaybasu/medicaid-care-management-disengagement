@@ -91,6 +91,11 @@ for name, text in scan.items():
         if v >= 1000 and v in vals: continue
         fails.append((name, f"number {tok} not derivable from canonical.json"))
 must(APP, "appendix(lever detail)", n(L["equipoise_dps"]), str(L["switcher_patients"]), str(L["informative_patients"]), n(L["informative_dps"]), f"{L['within_patient_fe']['odds_ratio']:.2f}", f"{L['msm_iptw']['odds_ratio']:.2f}")
+SE = C.get("staff_effects"); SIV = C.get("staff_iv")
+if SE:
+    H_ = SE["chw_only"]; A_ = SE["all_staff_role_adjusted"]
+    must(MS+APP, "manuscript+appendix(staff effects)", n(H_["n_patients"]), str(H_["n_staff"]), n(A_["n_patients"]), str(A_["n_staff"]), pc(H_["mean_outcome_bottom_quartile_staff"]), pc(H_["mean_outcome_top_quartile_staff"]), f"{100*H_['adjusted_gap_top_minus_bottom_quartile']:.1f}", f"{H_['validation']['forecast_coef']:.2f}", f"{A_['validation']['forecast_coef']:.2f}", f"{100*A_['icc']:.1f}%")
+if SIV: must(MS+APP, "manuscript+appendix(staff iv)", n(SIV["n_patients"]), str(SIV["n_staff"]), *[f"{r['late_rd']:+.2f}" for r in SIV["actions"].values()])
 # ---------- report
 print("| document | missing or non-derivable |\n|---|---|")
 for a, b in fails: print(f"| {a} | {b} |")

@@ -31,6 +31,8 @@ Analysis code for the manuscript of the same title (target: npj Digital Medicine
 | (dry run) | `scripts/adjudicate_reviewer_a.py`, `scripts/test_reviewer_a_adjudication.py` | keyword-rule procedure used to pre-fill one physician reviewer's forms before that reviewer's case-by-case review and approval (documented in Supplementary Note S7) |
 | 21 | `scripts/21_program_scope.py` | `results/program_scope.json` (distinct assigned primary care clinicians, practice organizations, and partner entities for the eligible members; read-only query of the clinical data mart) |
 | 22 | `scripts/22_table_cis.py` | `results/table_cis.json` (member-bootstrap intervals for every Table 3 subgroup and leave-one-state-out row, and for the secondary outcomes in Supplementary Table S18) |
+| 23 | `scripts/23_staff_preference_iv.py` | `results/staff_iv.json` (staff-assignment instruments for first-30-day actions, amendment v3.3; gates reported) |
+| 24 | `scripts/24_staff_effects.py` | `results/staff_effects.json` (assigned-staff effects with split-sample validation, amendment v3.4) |
 | audit | `audit_consistency.py` | Discrepancy table comparing every number in the manuscript, memo, and tables to `results/canonical.json`; exit code 1 on any mismatch |
 
 Run in order from this directory with the project Python environment. No script writes a literal result; every figure and table is rendered from `results/canonical.json`.
@@ -43,7 +45,7 @@ Program-scope descriptors in the manuscript (contracted clinicians, practice org
 
 ## Pre-registration
 
-Amendment v3.2 (`PREREGISTRATION_amendment_v3_2.md`, 2026-09-09) fixes the 90-of-90-day enrollment rule, the temporal split (training contacts dated before 2025-07-01 only), the single-phase blinded physician review of clinical stakes, and the reporting changes (confusion matrix, Youden comparison, equalized odds). The two-phase physician review of v3.1 and its dry-run adjudication script are superseded (`scripts/superseded_*`).
+Amendments v3.3 and v3.4 (2026-09-10) add the staff-assignment instruments and assigned-staff effects. Amendment v3.2 (`PREREGISTRATION_amendment_v3_2.md`, 2026-09-09) fixes the 90-of-90-day enrollment rule, the temporal split (training contacts dated before 2025-07-01 only), the single-phase blinded physician review of clinical stakes, and the reporting changes (confusion matrix, Youden comparison, equalized odds). The two-phase physician review of v3.1 and its dry-run adjudication script are superseded (`scripts/superseded_*`).
 
 
 `PREREGISTRATION_v3_disengagement.md` and `PREREGISTRATION_amendment_v3_1.md` (dated 2026-09-08) fixed the outcome, predictors, models, contrasts, validation design, lever gates, and reporting plan before test-era analysis. Section 10 records deviations with dates.

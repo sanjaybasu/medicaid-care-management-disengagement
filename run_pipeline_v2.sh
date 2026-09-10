@@ -18,4 +18,6 @@ run 18_metric_cis.py "" metric_cis
 run 19_ablation.py "" ablation
 run 20_rolling_refit.py "" rolling_refit
 run 22_table_cis.py "" table_cis
+run 23_staff_preference_iv.py "" staff_iv
+run 24_staff_effects.py "" staff_effects
 echo "=== PIPELINE DONE $(date '+%H:%M:%S')"

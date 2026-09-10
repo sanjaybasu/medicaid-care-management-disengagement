@@ -33,6 +33,7 @@ Analysis code for the manuscript of the same title (target: npj Digital Medicine
 | 22 | `scripts/22_table_cis.py` | `results/table_cis.json` (member-bootstrap intervals for every Table 3 subgroup and leave-one-state-out row, and for the secondary outcomes in Supplementary Table S18) |
 | 23 | `scripts/23_staff_preference_iv.py` | `results/staff_iv.json` (staff-assignment instruments for first-30-day actions, amendment v3.3; gates reported) |
 | 24 | `scripts/24_staff_effects.py` | `results/staff_effects.json` (assigned-staff effects with split-sample validation, amendment v3.4) |
+| 25 | `scripts/25_attempts.py` | `results/attempts.json` (logged unsuccessful outreach attempts around decision points; time of day of contacts; needs `data_cache/encounter_times_study.parquet` pulled from lighthouse EncounterNote) |
 | audit | `audit_consistency.py` | Discrepancy table comparing every number in the manuscript, memo, and tables to `results/canonical.json`; exit code 1 on any mismatch |
 
 Run in order from this directory with the project Python environment. No script writes a literal result; every figure and table is rendered from `results/canonical.json`.

@@ -400,3 +400,18 @@ if SEF:
         for k, lab in HN.items(): f.write(f"| {lab} | " + " | ".join(f"{SEF[s_]['heterogeneity_B'][k]['interaction']:+.2f} ({SEF[s_]['heterogeneity_B'][k]['interaction_ci_95'][0]:+.2f} to {SEF[s_]['heterogeneity_B'][k]['interaction_ci_95'][1]:+.2f})" for s_ in SEF) + " |\n")
     canon["derived"]["staff_effects"] = {k: {"icc": v["icc"], "gap_pp": round(100*v["adjusted_gap_top_minus_bottom_quartile"], 1), "low_q": round(100*v["mean_outcome_bottom_quartile_staff"], 1), "high_q": round(100*v["mean_outcome_top_quartile_staff"], 1), "forecast": v["validation"]["forecast_coef"], "balance_pass": v["balance_B_on_effA"]["pass"]} for k, v in SEF.items()}
 json.dump(canon, open(R/"canonical.json", "w"), indent=1, default=str); print("staff analyses rendered")
+
+# ======================= Outreach attempts and time of day (script 25) =======================
+AT = J("attempts.json")
+if AT:
+    canon["attempts"] = AT; canon["generated_from"].append("attempts.json")
+    with open(TAB/"tableS23_attempts.md", "w") as f:
+        f.write(f"**Supplementary Table S23. Logged outreach attempts without two-way contact, and time of day of contacts.** Attempts are encounter notes marked as not having occurred (a call, text, or visit that did not reach the patient); {AT['attempt_notes_study_patients']:,} attempt notes and {AT['completed_notes_study_patients']:,} completed-contact notes were recorded for the study patients. Times are local to the patient's state.\n\n| Quantity | Value |\n|---|---|\n")
+        rows = [("Disengagements (no completed contact in days 1 to 90) followed by at least one logged attempt in those 90 days", f"{AT['disengagements_with_any_attempt_in_90d_pct']}%"), ("Disengagements followed by three or more attempts", f"{AT['disengagements_with_3plus_attempts_pct']}%"), ("Mean attempts in the 90 days after a disengagement; after a retained contact", f"{AT['disengagements_mean_attempts_90d']}; {AT['retained_mean_attempts_90d']}"),
+                ("Explicit exits followed by at least one attempt", f"{AT['explicit_exit_with_any_attempt_pct']}%"), ("Silent losses followed by at least one attempt", f"{AT['silent_loss_with_any_attempt_pct']}%"), ("Test-era disengagements followed by at least one attempt", f"{AT['test_era_disengagements_with_any_attempt_pct']}%"),
+                ("Completed contacts on weekday evenings after 5 pm; on weekends", f"{AT['completed_share_weekday_evening_after_5pm_local']}%; {AT['completed_share_weekend_local']}%"), ("Attempts on weekday evenings after 5 pm; on weekends", f"{AT['attempts_share_weekday_evening_after_5pm_local']}%; {AT['attempts_share_weekend_local']}%")]
+        for a, b in rows: f.write(f"| {a} | {b} |\n")
+        f.write("\n**Disengagement within 90 days by number of logged attempts in the 30 days before the decision point.**\n\n| Attempts in prior 30 days | Decision points | Disengagement |\n|---|---|---|\n")
+        for k, v in AT["disengagement_rate_by_prior30_attempts"].items(): f.write(f"| {k} | {v['n']:,} | {100*v['rate']:.1f}% |\n")
+    canon["derived"]["attempts"] = {"dis_any_attempt_pct": AT["disengagements_with_any_attempt_in_90d_pct"], "dis_no_attempt_pct": round(100 - AT["disengagements_with_any_attempt_in_90d_pct"], 1), "prior30_rate_0": round(100*AT["disengagement_rate_by_prior30_attempts"]["0"]["rate"], 1), "prior30_rate_5plus": round(100*AT["disengagement_rate_by_prior30_attempts"]["5+"]["rate"], 1)}
+json.dump(canon, open(R/"canonical.json", "w"), indent=1, default=str); print("attempts rendered")

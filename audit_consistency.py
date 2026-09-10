@@ -96,6 +96,8 @@ if SE:
     H_ = SE["chw_only"]; A_ = SE["all_staff_role_adjusted"]
     must(MS+APP, "manuscript+appendix(staff effects)", n(H_["n_patients"]), str(H_["n_staff"]), n(A_["n_patients"]), str(A_["n_staff"]), pc(H_["mean_outcome_bottom_quartile_staff"]), pc(H_["mean_outcome_top_quartile_staff"]), f"{100*H_['adjusted_gap_top_minus_bottom_quartile']:.1f}", f"{H_['validation']['forecast_coef']:.2f}", f"{A_['validation']['forecast_coef']:.2f}", f"{100*A_['icc']:.1f}%")
 if SIV: must(MS+APP, "manuscript+appendix(staff iv)", n(SIV["n_patients"]), str(SIV["n_staff"]), *[f"{r['late_rd']:+.2f}" for r in SIV["actions"].values()])
+AT = C.get("attempts")
+if AT: must(MS+APP, "manuscript+appendix(attempts)", f"{AT['disengagements_with_any_attempt_in_90d_pct']}%", f"{AT['disengagements_with_3plus_attempts_pct']}%", f"{AT['explicit_exit_with_any_attempt_pct']}%", f"{AT['silent_loss_with_any_attempt_pct']}%", f"{D['attempts']['dis_no_attempt_pct']}%")
 # ---------- report
 print("| document | missing or non-derivable |\n|---|---|")
 for a, b in fails: print(f"| {a} | {b} |")

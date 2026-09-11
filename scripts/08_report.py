@@ -459,3 +459,11 @@ if OPS:
             for k, v in eq[dim].items(): f.write(f"| {k.title() if dim == 'state' else k} | {v['n']:,} | {100*v['screened_out_share']:.1f}% |\n")
     canon["derived"]["ops_rule"] = {"ab_ppv_pct": round(100*OPS["rule_ab_risk_and_lapsed_unattended"]["ppv"], 1), "ab_flag_pct": round(100*OPS["rule_ab_risk_and_lapsed_unattended"]["flag_rate"], 1), "ab_sens": OPS["rule_ab_risk_and_lapsed_unattended"]["sensitivity"], "c_diff_pp": round(100*OPS["rule_c_uplift"]["difference"], 1), "c_high_attempts_per_return": OPS["rule_c_uplift"]["by_tertile"]["high"]["attempts_per_additional_return"], "c_low_attempts_per_return": OPS["rule_c_uplift"]["by_tertile"]["low"]["attempts_per_additional_return"]}
 json.dump(canon, open(R/"canonical.json", "w"), indent=1, default=str); print("ops rule rendered")
+
+# ======================= Activation-day contacts (day 0) =======================
+from sklearn.metrics import roc_auc_score as _auc
+_el = el.copy(); _d0 = (_el.days_from_zd == 0); _P = P.copy(); _t0 = (_P.days_from_zd == 0)
+canon["derived"]["day0"] = {"share_of_decision_points_day0_pct": round(100*float(_d0.mean()), 1), "disengagement_rate_day0_pct": round(100*float(_el.y_primary[_d0].mean()), 1), "disengagement_rate_after_day0_pct": round(100*float(_el.y_primary[~_d0].mean()), 1), "share_of_disengagements_from_day0_pct": round(100*float(_el.y_primary[_d0].sum()/_el.y_primary.sum()), 1),
+    "test_share_day0_pct": round(100*float(_t0.mean()), 1), "test_share_of_disengagements_from_day0_pct": round(100*float(_P.y[_t0].sum()/_P.y.sum()), 1),
+    "auroc_excluding_day0": {m: round(float(_auc(_P.y[~_t0], _P[m][~_t0])), 3) for m in ["M0_signal_risk","M2_structured_history","M5_full"]}, "auroc_day0_only": {m: round(float(_auc(_P.y[_t0], _P[m][_t0])), 3) for m in ["M0_signal_risk","M2_structured_history","M5_full"]}}
+json.dump(canon, open(R/"canonical.json", "w"), indent=1, default=str); print("day0 rendered", canon["derived"]["day0"])

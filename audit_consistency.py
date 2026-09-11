@@ -105,6 +105,8 @@ if BX:
 OPS = C.get("ops_rule")
 if OPS:
     ab_ = OPS["rule_ab_risk_and_lapsed_unattended"]; must(MS+TABS+APP+MEMO, "ops rule", n(ab_["tp"]), n(ab_["fp"]), n(ab_["fn"]), f"{100*ab_['ppv']:.1f}%")
+Z0 = D.get("day0")
+if Z0: must(MS+MEMO, "day0", f"{Z0['share_of_decision_points_day0_pct']}%", f"{Z0['disengagement_rate_day0_pct']}%", f"{Z0['share_of_disengagements_from_day0_pct']}%", f(Z0["auroc_excluding_day0"]["M2_structured_history"]))
 # ---------- report
 print("| document | missing or non-derivable |\n|---|---|")
 for a, b in fails: print(f"| {a} | {b} |")

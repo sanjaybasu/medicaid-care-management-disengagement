@@ -30,18 +30,20 @@ for r in sf.itertuples():
         no_contact_31_120=int(not w31_120.any()), grad_120=int(bool(st120 & GRAD)), enrolled_days_31_120=en120))
 o = pd.DataFrame(rows)
 CUT = pd.Timestamp("2025-07-01")  # test era begins; training-era patients' contacts on or after this date are excluded so training and test do not overlap in calendar time
-o["eligible_landmark"] = (o.enrolled_days_90 >= 90).astype(int)  # enrollment criterion alone (used by the rolling-landmark and quarterly-refit analyses, which split by date)
-o["training_overlap_excluded"] = ((o.enrolled_days_90 >= 90) & (o.training_era == 1) & (o.enc_date >= CUT)).astype(int)
-o["eligible"] = ((o.enrolled_days_90 >= 90) & ~((o.training_era == 1) & (o.enc_date >= CUT))).astype(int)
+o = o.merge(sf[["encounter_id","tier1_flg"]].rename(columns={"encounter_id":"decision_id"}), on="decision_id", how="left"); o["tier1"] = (o.tier1_flg.fillna(0) == 1)  # amendment v3.7: rising-risk (tier 1) patients only
+o["not_tier1_excluded"] = ((o.enrolled_days_90 >= 90) & ~o.tier1).astype(int)
+o["eligible_landmark"] = ((o.enrolled_days_90 >= 90) & o.tier1).astype(int)  # enrollment + tier criterion (used by the rolling-landmark and quarterly-refit analyses, which split by date)
+o["training_overlap_excluded"] = ((o.enrolled_days_90 >= 90) & o.tier1 & (o.training_era == 1) & (o.enc_date >= CUT)).astype(int)
+o["eligible"] = ((o.enrolled_days_90 >= 90) & o.tier1 & ~((o.training_era == 1) & (o.enc_date >= CUT))).astype(int)
 o["y_primary"] = ((o.no_contact_90 == 1) & (o.grad_90 == 0)).astype(int)          # disengagement within 90 days
 o["y_explicit"] = o.dis_status_90                                                     # secondary a
 o["y_silent"] = ((o.y_primary == 1) & (o.admin_90 == 0)).astype(int)               # secondary b
 o["y_30"] = o.no_contact_30                                                           # secondary c
-o["lever_eligible"] = ((o.enrolled_days_31_120 >= 90) & (o.enc_date <= pd.Timestamp("2026-05-09"))).astype(int)  # 120-day window complete at the 2026-09-06 pull
+o["lever_eligible"] = ((o.enrolled_days_31_120 >= 90) & o.tier1 & (o.enc_date <= pd.Timestamp("2026-05-09"))).astype(int)  # 120-day window complete at the 2026-09-06 pull
 o["y_lever"] = ((o.no_contact_31_120 == 1) & (o.grad_120 == 0)).astype(int)         # lever outcome, days 31-120
 o.to_parquet(D/"dp_outcomes.parquet")
 el = o[o.eligible == 1]; te = el[el.training_era == 0]
-flow = {"decision_points": len(o), "patients": int(o.person_id.nunique()), "eligible_90_enrolled_days": int(o.eligible_landmark.sum()), "eligible_pct": round(100*o.eligible_landmark.mean(), 1), "excluded_training_overlap": int(o.training_overlap_excluded.sum()), "eligible_analysis": int(o.eligible.sum()), "test_window": [str(te.enc_date.min().date()), str(te.enc_date.max().date())], "training_window": [str(el[el.training_era == 1].enc_date.min().date()), str(el[el.training_era == 1].enc_date.max().date())],
+flow = {"decision_points": len(o), "patients": int(o.person_id.nunique()), "eligible_90_enrolled_days": int((o.enrolled_days_90 >= 90).sum()), "eligible_pct": round(100*float((o.enrolled_days_90 >= 90).mean()), 1), "excluded_not_tier1": int(o.not_tier1_excluded.sum()), "eligible_tier1": int(o.eligible_landmark.sum()), "excluded_training_overlap": int(o.training_overlap_excluded.sum()), "eligible_analysis": int(o.eligible.sum()), "test_window": [str(te.enc_date.min().date()), str(te.enc_date.max().date())], "training_window": [str(el[el.training_era == 1].enc_date.min().date()), str(el[el.training_era == 1].enc_date.max().date())],
         "eligible_train": int((el.training_era == 1).sum()), "eligible_test": int(len(te)), "eligible_test_patients": int(te.person_id.nunique()),
         "primary_rate_all": round(el.y_primary.mean(), 4), "primary_rate_test": round(te.y_primary.mean(), 4), "primary_events_test": int(te.y_primary.sum()),
         "explicit_rate": round(el.y_explicit.mean(), 4), "silent_rate": round(el.y_silent.mean(), 4), "no_contact_30_rate": round(el.y_30.mean(), 4),

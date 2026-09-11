@@ -11,7 +11,7 @@
   "open_goals_log"
  ],
  "points": {
-  "prior_contacts_90d_log": -7,
+  "prior_contacts_90d_log": -8,
   "days_since_last_contact_log": 0,
   "first_30_days": -3,
   "encounter_patient_outreach": 3,
@@ -22,25 +22,25 @@
  },
  "logistic_coefficients": {
   "prior_contacts_90d_log": -1.088,
-  "days_since_last_contact_log": -0.036,
-  "first_30_days": -0.394,
-  "encounter_patient_outreach": 0.424,
-  "contact_by_coordinator_or_technician": 1.473,
-  "note_declined": 0.584,
-  "note_positive_engagement": -0.468,
-  "open_goals_log": 0.887
+  "days_since_last_contact_log": -0.038,
+  "first_30_days": -0.425,
+  "encounter_patient_outreach": 0.442,
+  "contact_by_coordinator_or_technician": 1.446,
+  "note_declined": 0.612,
+  "note_positive_engagement": -0.443,
+  "open_goals_log": 0.904
  },
- "logistic_intercept": -0.653,
+ "logistic_intercept": -0.66,
  "test_performance": {
-  "auroc": 0.8656,
-  "auprc": 0.5642,
+  "auroc": 0.864,
+  "auprc": 0.5499,
   "at_20pct_flagged": {
-   "per_100_flags": 57.9,
-   "sensitivity": 0.627,
-   "flag_rate": 0.205
+   "per_100_flags": 56.1,
+   "sensitivity": 0.618,
+   "flag_rate": 0.2
   },
   "score_range": [
-   -31,
+   -35,
    26
   ]
  }

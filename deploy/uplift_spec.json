@@ -20,10 +20,10 @@
   "state_wa": "state is Washington"
  },
  "uplift": "predict with both models on the same row; uplift = return_if_attempted - return_if_not_attempted",
- "median_uplift_among_lapsed_episodes": 0.0881,
+ "median_uplift_among_lapsed_episodes": 0.0788,
  "tertile_cutpoints": [
-  0.047,
-  0.1303
+  0.0412,
+  0.1229
  ],
- "n_lapsed_episodes_fit": 19781
+ "n_lapsed_episodes_fit": 18009
 }

@@ -1,12 +1,6 @@
 #!/bin/zsh
-# Re-run the analysis chain after the eligibility (90 of 90 enrolled days) and temporal-split (training contacts before 2025-07-01) changes.
 set -e; cd /Users/sanjaybasu/waymark-local/packaging/care-management-disengagement; PY=/opt/anaconda3/bin/python3
-run() { echo "=== $1 $(date '+%H:%M:%S')"; $PY scripts/$1 ${2:-} > results/${3}_log.txt 2>&1; }
-run 01_outcomes.py "" outcomes
-run 04_models.py --with-embeddings models_emb
-run 05_subgroups.py "" subgroups
-run 06_levers.py "" levers
-run 07_sequence.py "" sequence
+run() { echo "=== $1 $(date +%H:%M:%S)"; $PY scripts/$1 ${2:-} > results/${3}_log.txt 2>&1; }
 run 09_sensitivity.py "" sensitivity
 run 10_landmark.py "" landmark
 run 13_simple_score.py "" simple_score

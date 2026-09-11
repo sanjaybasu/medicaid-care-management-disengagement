@@ -13,7 +13,7 @@ LABEL = {"M0_signal_risk": "M0 acute-care risk score", "M1_structured": "M1 stru
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9, "axes.spines.top": False, "axes.spines.right": False})
 COL = {"M0_signal_risk": "#9e9e9e", "M1_structured": "#7fb3d5", "M2_structured_history": "#2e6f9e", "M3_plus_tfidf_text": "#e08e45", FULL: "#b2182b"}
 # ---------------- data
-F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet"); df = F.merge(O.drop(columns=["person_id","enc_date","training_era","state"]), on="decision_id")
+F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet"); df = F.merge(O.drop(columns=[c for c in ["person_id","enc_date","training_era","state","tier1_flg","tier1"] if c in O.columns]), on="decision_id")
 el = df[df.eligible == 1].copy(); P = pd.read_parquet(D/"test_predictions.parquet")
 INP = ["HOME_VISIT","IN_COMMUNITY","PROVIDER_OFFICE","HOSPITAL","CBO","OTHER_INPERSON"]; TXT = ["SMS_TEXT","SMS_TEXT_CMT","EMAIL"]; VID = ["VIDEO_VISIT"]
 def modality(ct): return "In person" if ct in INP else ("Text or email" if ct in TXT else ("Video" if ct in VID else "Telephone or other remote"))
@@ -37,7 +37,7 @@ def t1_block(d):
 t1 = {"Training era (activated through 2025-06-30)": t1_block(el[el.training_era == 1]), "Test era (activated 2025-07-01 or later)": t1_block(el[el.training_era == 0]), "All": t1_block(el)}
 t1df = pd.DataFrame(t1); t1df.index.name = "Characteristic"; t1df.to_csv(TAB/"table1_cohort.csv")
 with open(TAB/"table1_cohort.md", "w") as f:
-    f.write(f"**Table 1. Patients and decision points by era.** Patient characteristics are taken at each patient's first eligible contact; contact characteristics are over all eligible decision points (completed care-team contacts within 365 days of activation with at least 90 enrolled days in the health plan in the following 90 days). Training-era contacts are dated {flow['training_window'][0]} to {flow['training_window'][1]} and test-era contacts {flow['test_window'][0]} to {flow['test_window'][1]}.\n\n| Characteristic | " + " | ".join(t1df.columns) + " |\n|---|" + "---|"*len(t1df.columns) + "\n")
+    f.write(f"**Table 1. Patients and decision points by era.** Patient characteristics are taken at each patient's first eligible contact; contact characteristics are over all eligible decision points (completed care-team contacts with rising-risk (tier 1) patients within 365 days of activation, with at least 90 enrolled days in the health plan in the following 90 days). Training-era contacts are dated {flow['training_window'][0]} to {flow['training_window'][1]} and test-era contacts {flow['test_window'][0]} to {flow['test_window'][1]}.\n\n| Characteristic | " + " | ".join(t1df.columns) + " |\n|---|" + "---|"*len(t1df.columns) + "\n")
     for i, r in t1df.iterrows(): f.write(f"| {i} | " + " | ".join(r.values) + " |\n")
 # ---------------- derived numbers for canonical
 M = models["models"]; C = models["contrasts"]
@@ -67,11 +67,11 @@ json.dump(canon, open(R/"canonical.json", "w"), indent=1, default=str)
 # ---------------- Figure 1: flow (all counts from flow.json / canonical)
 fig, ax = plt.subplots(figsize=(9.2, 3.9)); ax.axis("off"); ax.set_xlim(0,1.15); ax.set_ylim(0.15,1.0); d = canon["derived"]
 boxes = [(0.42, 0.90, f"Completed care-team contacts within 365 days of activation\n{flow['decision_points']:,} decision points; {flow['patients']:,} patients; {d['study_window'][0]} to {d['study_window'][1]}"),
-         (0.42, 0.64, f"Eligible: at least 90 enrolled days in the health plan in the following 90 days\n{flow['eligible_90_enrolled_days']:,} decision points ({flow['eligible_pct']}%)"),
+         (0.42, 0.64, f"Eligible: rising-risk patients with at least 90 enrolled days in the health plan in the following 90 days\n{flow['eligible_tier1']:,} decision points"),
          (0.20, 0.34, f"Training era\n(activated through 2025-06-30)\n{flow['eligible_train']:,} decision points\n{d['train_patients']:,} patients"),
          (0.64, 0.34, f"Test era\n(activated 2025-07-01 or later)\n{flow['eligible_test']:,} decision points\n{flow['eligible_test_patients']:,} patients\n{flow['primary_events_test']:,} disengagements ({100*flow['primary_rate_test']:.1f}%)"),
          (0.93, 0.64, f"Excluded: fewer than\n90 enrolled days in the\nfollowing 90 days\n({d['excluded_dps']:,}; {d['excluded_pct']}%)"),
-         (0.93, 0.34, f"Excluded from the split:\ntraining-era patients' contacts\ndated {flow['test_window'][0]} or later\n({flow['excluded_training_overlap']:,})")]
+         (0.93, 0.34, f"Excluded: not rising-risk (tier 1)\n({flow['excluded_not_tier1']:,}); training-era\ncontacts dated {flow['test_window'][0]} or later\n({flow['excluded_training_overlap']:,})")]
 for x, y, t in boxes: ax.text(x, y, t, ha="center", va="center", fontsize=8.3, bbox=dict(boxstyle="round,pad=0.5", fc="#f4f6f8", ec="#555"))
 for (x0,y0),(x1,y1) in [((0.42,0.84),(0.42,0.71)),((0.42,0.57),(0.20,0.45)),((0.42,0.57),(0.64,0.45)),((0.42,0.77),(0.80,0.66)),((0.42,0.57),(0.80,0.38))]: ax.annotate("", xy=(x1,y1), xytext=(x0,y0), arrowprops=dict(arrowstyle="->", color="#555"))
 fig.savefig(FIG/"fig1_flow.png", dpi=300, bbox_inches="tight"); plt.close(fig)
@@ -165,7 +165,7 @@ print(json.dumps(canon["derived"], indent=1, default=str)[:3000])
 
 # ---------------- Supplementary tables S3 (sensitivity) and S4 (lexicon)
 if sens:
-    NM = {"base_eligible90_temporal_split": "Base specification (at least 90 enrolled days; training contacts dated before 2025-07-01; test era activated 2025-07-01 or later)", "eligibility_60_enrolled_days": "Eligibility relaxed to at least 60 enrolled days in the following 90 days", "no_eligibility_restriction_enrollment_covariate": "No eligibility restriction; enrolled days as a covariate", "outcome_y_30": "Outcome: no contact within 30 days", "outcome_y_silent": "Outcome: silent loss within 90 days", "outcome_y_explicit": "Outcome: explicit exit status within 90 days"}
+    NM = {"base_eligible90_temporal_split": "Base specification (at least 90 enrolled days; training contacts dated before 2025-07-01; test era activated 2025-07-01 or later)", "eligibility_60_enrolled_days": "Eligibility relaxed to at least 60 enrolled days in the following 90 days", "no_tier1_restriction": "Tier 1 (rising-risk) restriction removed", "no_eligibility_restriction_enrollment_covariate": "No eligibility restriction; enrolled days as a covariate", "outcome_y_30": "Outcome: no contact within 30 days", "outcome_y_silent": "Outcome: silent loss within 90 days", "outcome_y_explicit": "Outcome: explicit exit status within 90 days"}
     with open(TAB/"tableS3_sensitivity.md", "w") as f:
         f.write("**Supplementary Table S3. Sensitivity of the structured plus contact history model (M2) and the model with note text (M3, TF-IDF stack) to eligibility, split, and outcome definition.** Each row refits both models and evaluates on the test era under the stated specification; embeddings, lexicon, and tags are not included in M3. Parentheses are 95% patient-bootstrap intervals (300 resamples).\n\n| Specification | Training decision points | Test decision points | Test event rate | AUROC, M2 | AUPRC, M2 | AUROC, M3 | AUPRC, M3 | AUPRC gain from text |\n|---|---|---|---|---|---|---|---|---|\n")
         def cis(v, m, k):

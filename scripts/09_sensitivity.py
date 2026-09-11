@@ -10,7 +10,7 @@ import sys; sys.path.insert(0, 'scripts'); from _boot import boot_ci, std_fns
 import numpy as np
 D = pathlib.Path("data_cache"); R = pathlib.Path("results"); HP = json.load(open(R/"hyperparameters.json"))["gbm"]
 F = pd.read_parquet(D/"dp_features.parquet"); O = pd.read_parquet(D/"dp_outcomes.parquet")
-df = F.merge(O.drop(columns=["person_id","enc_date","training_era","state"]), on="decision_id"); df["enc_date"] = pd.to_datetime(df.enc_date)
+df = F.merge(O.drop(columns=[c for c in ["person_id","enc_date","training_era","state","tier1_flg","tier1"] if c in O.columns]), on="decision_id"); df["enc_date"] = pd.to_datetime(df.enc_date)
 STRUCT = ["age","risk_percentile","tier1_flg","days_from_zd","days_since_last_adt"] + [f"adt_all_prior_{w}d" for w in [30,90,180,365]] + ["diabetes","htn","chf","copd","sud","any_bh","mdd","asthma","polypharmacy","high_ed_ip","no_pcp_last_10mo"]
 HIST = ["n_prior","n_prior_90","n_prior_30","days_since_last_contact","chw90","pharm90","cpht90","ther90","cc90","inp90","textmod90","n_disc90","gap_mean","gap_max","cur_inp","cur_textmod","note_len","goals_open","goals_completed_before","goals_social","goals_clinical","goals_bh"]
 def design(d, extra=()):
@@ -34,9 +34,11 @@ out = {}
 cut = pd.Timestamp("2025-07-01"); df = df[~((df.training_era == 1) & (df.enc_date >= cut))].reset_index(drop=True)  # training contacts before the test era only, as in the main analysis
 base = df[df.eligible == 1].reset_index(drop=True); tr = (base.training_era == 1).values
 out["base_eligible90_temporal_split"] = run(base, tr, ~tr, "y_primary")
-e60 = df[df.enrolled_days_90 >= 60].reset_index(drop=True); tr60 = (e60.training_era == 1).values
+e60 = df[(df.enrolled_days_90 >= 60) & (df.tier1_flg == 1)].reset_index(drop=True); tr60 = (e60.training_era == 1).values
 out["eligibility_60_enrolled_days"] = run(e60, tr60, ~tr60, "y_primary")
-alld = df.reset_index(drop=True); tra = (alld.training_era == 1).values
+not1 = df[df.enrolled_days_90 >= 90].reset_index(drop=True); trn = (not1.training_era == 1).values
+out["no_tier1_restriction"] = run(not1, trn, ~trn, "y_primary")
+alld = df[df.tier1_flg == 1].reset_index(drop=True); tra = (alld.training_era == 1).values
 out["no_eligibility_restriction_enrollment_covariate"] = run(alld, tra, ~tra, "y_primary", extra=("enrolled_days_90",))
 for yc in ["y_30", "y_silent", "y_explicit"]: out[f"outcome_{yc}"] = run(base, tr, ~tr, yc)
 json.dump(out, open(R/"sensitivity.json", "w"), indent=1); print(json.dumps(out, indent=1))

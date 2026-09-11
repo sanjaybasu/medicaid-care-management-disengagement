@@ -6,28 +6,28 @@
  ],
  "order_list_by": "predicted return if attempted from the uplift model (uplift_*.joblib), highest first; do not use it to exclude patients",
  "test_set_performance_rule_ab": {
-  "tp": 1739,
-  "fp": 423,
-  "fn": 1302,
-  "tn": 12646,
-  "flagged": 2162,
-  "flag_rate": 0.1342,
-  "sensitivity": 0.5719,
-  "specificity": 0.9676,
-  "ppv": 0.8043,
-  "npv": 0.9067
+  "tp": 1526,
+  "fp": 392,
+  "fn": 1176,
+  "tn": 11763,
+  "flagged": 1918,
+  "flag_rate": 0.1291,
+  "sensitivity": 0.5648,
+  "specificity": 0.9677,
+  "ppv": 0.7956,
+  "npv": 0.9091
  },
  "test_set_performance_rule_abc": {
-  "tp": 1031,
-  "fp": 228,
-  "fn": 2010,
-  "tn": 12841,
-  "flagged": 1259,
-  "flag_rate": 0.0782,
-  "sensitivity": 0.339,
-  "specificity": 0.9826,
-  "ppv": 0.8189,
-  "npv": 0.8647
+  "tp": 833,
+  "fp": 204,
+  "fn": 1869,
+  "tn": 11951,
+  "flagged": 1037,
+  "flag_rate": 0.0698,
+  "sensitivity": 0.3083,
+  "specificity": 0.9832,
+  "ppv": 0.8033,
+  "npv": 0.8648
  },
  "monitoring": "monthly realized disengagement by predicted decile; flag rate and sensitivity by state and by race and ethnicity; refit quarterly"
 }

@@ -1,18 +1,17 @@
 {
  "flag_rule": "flag the 20% of contacts with the highest predicted probability",
- "validated_model_threshold_probability": 0.4551,
- "deploy_model_threshold_probability": 0.445,
+ "validated_model_threshold_probability": 0.4443,
+ "deploy_model_threshold_probability": 0.4295,
  "deploy_model_decile_cutpoints": [
-  0.0054,
-  0.01,
-  0.0166,
-  0.0269,
-  0.0441,
-  0.087,
-  0.2382,
-  0.445,
-  0.6199
+  0.0081,
+  0.0123,
+  0.019,
+  0.0288,
+  0.0454,
+  0.0852,
+  0.229,
+  0.4295,
+  0.5934
  ],
- "recalibrate": "re-estimate the threshold on the most recent completed quarter; refit the model quarterly",
- "validated_model_threshold_probability_note": "80th percentile of the validated model's predictions on its own training set; the 80th percentile of its test-set predictions (Supplementary Table S19) was 0.498. Either defines a 20% flag rate on the population it is computed on; set the live threshold from the most recent completed quarter."
+ "recalibrate": "re-estimate the threshold on the most recent completed quarter; refit the model quarterly"
 }
